@@ -1,175 +1,175 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Graphing Calculator with Nerdamer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+<head>
+  <meta charset="UTF-8" />
+  <title>Graphing Calculator with Nerdamer & Colors</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- jQuery (needed for MathQuill) -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- jQuery (needed for MathQuill) -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <!-- MathQuill -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.css"
-    />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.js"></script>
+  <!-- MathQuill -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.css"
+  />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.js"></script>
 
-    <!-- JSXGraph -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css"
-    />
-    <script src="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js"></script>
+  <!-- JSXGraph -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css"
+  />
+  <script src="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js"></script>
 
-    <!-- Nerdamer (UMD build with LaTeX support) -->
-    <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/all.min.js"></script>
+  <!-- Nerdamer (UMD build with LaTeX support) -->
+  <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/all.min.js"></script>
 
-    <!-- React / ReactDOM / Babel -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <!-- React / ReactDOM / Babel -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 
-    <style>
-      html, body, #root {
-        height: 100%;
-        margin: 0;
+  <style>
+    html, body, #root {
+      height: 100%;
+      margin: 0;
+    }
+    #jxgboard {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// MathQuill input component
+function MathInput({ latex, onChange, onEnter }) {
+  const containerRef = useRef(null);
+  const mathFieldRef = useRef(null);
+
+  useEffect(() => {
+    if (!containerRef.current || !window.MathQuill) return;
+    const MQ = window.MathQuill.getInterface(2);
+    mathFieldRef.current = MQ.MathField(containerRef.current, {
+      spaceBehavesLikeTab: true,
+      handlers: {
+        edit: () => {
+          onChange(mathFieldRef.current.latex());
+        },
+        enter: () => {
+          onEnter();
+        }
+      },
+    });
+    mathFieldRef.current.latex(latex || "");
+  }, []);
+
+  return (
+    <span
+      ref={containerRef}
+      className="block bg-white p-2 rounded border min-h-[40px]"
+    ></span>
+  );
+}
+
+function GraphingCalculator() {
+  const boardRef = useRef(null);
+  const [expressions, setExpressions] = useState([""]);
+  const jsxBoard = useRef(null);
+  const curvesRef = useRef([]);
+  
+  const colors = ["#e6194B", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4", "#46f0f0", "#f032e6"];
+
+  // Initialize JSXGraph board
+  useEffect(() => {
+    if (!boardRef.current) return;
+    if (!jsxBoard.current) {
+      jsxBoard.current = JXG.JSXGraph.initBoard("jxgboard", {
+        boundingbox: [-10, 10, 10, -10],
+        axis: true,
+        grid: true,
+        keepaspectratio: true,
+        showCopyright: false
+      });
+    }
+  }, []);
+
+  // Redraw curves when expressions change
+  useEffect(() => {
+    if (!jsxBoard.current) return;
+    const board = jsxBoard.current;
+
+    // Remove only previous curves
+    curvesRef.current.forEach((c) => board.removeObject(c));
+    curvesRef.current = [];
+
+    expressions.forEach((expr, index) => {
+      if (!expr.trim()) return;
+
+      try {
+        const normalized = expr.replace(/−/g, "-");
+        let curve;
+        const color = colors[index % colors.length];
+
+        if (normalized.includes("=")) {
+          const [lhs, rhs] = normalized.split("=");
+          const fLatex = `(${lhs}) - (${rhs})`;
+          const parsed = nerdamer.convertFromLaTeX(fLatex);
+          const f = parsed.buildFunction(["x","y"]);
+          curve = board.create("implicitcurve", [(x,y) => f(x,y)], { strokeColor: color });
+        } else {
+          const parsed = nerdamer.convertFromLaTeX(normalized);
+          const f = parsed.buildFunction(["x"]);
+          curve = board.create("functiongraph", [(x) => f(x)], { strokeColor: color });
+        }
+
+        curvesRef.current.push(curve);
+      } catch(e) {
+        console.warn("Invalid expression:", expr, e);
       }
-      #jxgboard {
-        width: 100%;
-        height: 100%;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="root"></div>
+    });
 
-    <script type="text/babel">
-      const { useState, useEffect, useRef } = React;
+    board.update();
+  }, [expressions]);
 
-      function MathInput({ latex, onChange }) {
-        const containerRef = useRef(null);
-        const mathFieldRef = useRef(null);
+  const updateExpression = (index, latex) => {
+    const newExpressions = [...expressions];
+    newExpressions[index] = latex;
+    setExpressions(newExpressions);
+  };
 
-        useEffect(() => {
-          if (!containerRef.current || !window.MathQuill) return;
-          const MQ = window.MathQuill.getInterface(2);
-          mathFieldRef.current = MQ.MathField(containerRef.current, {
-            spaceBehavesLikeTab: true,
-            handlers: {
-              edit: () => {
-                onChange(mathFieldRef.current.latex());
-              },
-            },
-          });
-          mathFieldRef.current.latex(latex || "");
-        }, []);
+  const addInput = () => setExpressions([...expressions, ""]);
 
-        return (
-          <span
-            ref={containerRef}
-            className="block bg-white p-2 rounded border min-h-[40px]"
-          ></span>
-        );
-      }
+  return (
+    <div className="flex h-full">
+      <div className="w-1/3 p-4 space-y-2 overflow-y-auto bg-gray-100">
+        {expressions.map((expr, i) => (
+          <MathInput
+            key={i}
+            latex={expr}
+            onChange={(latex) => updateExpression(i, latex)}
+            onEnter={addInput}
+          />
+        ))}
+        <button
+          onClick={addInput}
+          className="px-3 py-2 bg-blue-500 text-white rounded"
+        >
+          + Add Expression
+        </button>
+      </div>
+      <div className="w-2/3 h-full" id="jxgboard" ref={boardRef}></div>
+    </div>
+  );
+}
 
-      function GraphingCalculator() {
-        const boardRef = useRef(null);
-        const [expressions, setExpressions] = useState([""]);
-        const jsxBoard = useRef(null);
-        const curvesRef = useRef([]);
-
-        // Initialize JSXGraph board
-        useEffect(() => {
-          if (!boardRef.current) return;
-          if (!jsxBoard.current) {
-            jsxBoard.current = JXG.JSXGraph.initBoard("jxgboard", {
-              boundingbox: [-10, 10, 10, -10], // [xMin, yMax, xMax, yMin]
-              axis: true,
-              grid: true,
-              keepaspectratio: true,
-              showCopyright: false
-            });
-          }
-        }, []);
-
-        // Redraw curves whenever expressions change
-        useEffect(() => {
-          if (!jsxBoard.current) return;
-          const board = jsxBoard.current;
-
-          // Remove only previous curves, not axes/grid
-          curvesRef.current.forEach((c) => board.removeObject(c));
-          curvesRef.current = [];
-
-          expressions.forEach((expr) => {
-            if (!expr.trim()) return;
-
-            try {
-              // normalize Unicode minus sign
-              const normalized = expr.replace(/−/g, "-");
-              let curve;
-
-              if (normalized.includes("=")) {
-                // Implicit: lhs = rhs
-                const [lhs, rhs] = normalized.split("=");
-                const fLatex = `(${lhs}) - (${rhs})`;
-                const parsed = nerdamer.convertFromLaTeX(fLatex);
-                const f = parsed.buildFunction(["x","y"]);
-                curve = board.create("implicitcurve", [(x,y) => f(x,y)]);
-              } else {
-                // Explicit: y = f(x)
-                const parsed = nerdamer.convertFromLaTeX(normalized);
-                const f = parsed.buildFunction(["x"]);
-                curve = board.create("functiongraph", [(x) => f(x)]);
-              }
-
-              curvesRef.current.push(curve);
-            } catch(e) {
-              console.warn("Invalid expression:", expr, e);
-            }
-          });
-
-          board.update();
-        }, [expressions]);
-
-        const updateExpression = (index, latex) => {
-          const newExpressions = [...expressions];
-          newExpressions[index] = latex;
-          setExpressions(newExpressions);
-        };
-
-        const addInput = () => setExpressions([...expressions, ""]);
-
-        return (
-          <div className="flex h-full">
-            {/* Left input column */}
-            <div className="w-1/3 p-4 space-y-2 overflow-y-auto bg-gray-100">
-              {expressions.map((expr, i) => (
-                <MathInput
-                  key={i}
-                  latex={expr}
-                  onChange={(latex) => updateExpression(i, latex)}
-                />
-              ))}
-              <button
-                onClick={addInput}
-                className="px-3 py-2 bg-blue-500 text-white rounded"
-              >
-                + Add Expression
-              </button>
-            </div>
-
-            {/* Right side graph */}
-            <div className="w-2/3 h-full" id="jxgboard" ref={boardRef}></div>
-          </div>
-        );
-      }
-
-      ReactDOM.createRoot(document.getElementById("root")).render(
-        <GraphingCalculator />
-      );
-    </script>
-  </body>
+ReactDOM.createRoot(document.getElementById("root")).render(<GraphingCalculator />);
+</script>
+</body>
 </html>
 
