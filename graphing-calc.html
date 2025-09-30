@@ -29,14 +29,24 @@
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+    <style>
+      html, body, #root {
+        height: 100%;
+        margin: 0;
+      }
+      #jxgboard {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
   </head>
-  <body class="h-screen">
-    <div id="root" class="h-full"></div>
+  <body>
+    <div id="root"></div>
 
     <script type="text/babel">
       const { useState, useEffect, useRef } = React;
 
-      // React wrapper for MathQuill input
       function MathInput({ latex, onChange }) {
         const containerRef = useRef(null);
         const mathFieldRef = useRef(null);
@@ -68,18 +78,19 @@
         const [expressions, setExpressions] = useState([""]);
         const jsxBoard = useRef(null);
 
-useEffect(() => {
-  if (!boardRef.current) return;
-  if (!jsxBoard.current) {
-    jsxBoard.current = JXG.JSXGraph.initBoard("jxgboard", {
-      boundingbox: [-10, 10, 10, -10],
-      axis: true,
-      grid: true,
-      keepaspectratio: true,
-      showCopyright: false
-    });
-  }
-}, []);
+        // Initialize JSXGraph board
+        useEffect(() => {
+          if (!boardRef.current) return;
+          if (!jsxBoard.current) {
+            jsxBoard.current = JXG.JSXGraph.initBoard("jxgboard", {
+              boundingbox: [-10, 10, 10, -10], // [xMin, yMax, xMax, yMin]
+              axis: true,
+              grid: true,
+              keepaspectratio: true,
+              showCopyright: false
+            });
+          }
+        }, []);
 
         // Redraw curves whenever expressions change
         useEffect(() => {
@@ -91,16 +102,19 @@ useEffect(() => {
             if (!expr.trim()) return;
 
             try {
-              if (expr.includes("=")) {
+              // normalize Unicode minus sign
+              const normalized = expr.replace(/−/g, "-");
+
+              if (normalized.includes("=")) {
                 // Implicit: lhs = rhs
-                const [lhs, rhs] = expr.split("=");
+                const [lhs, rhs] = normalized.split("=");
                 const fLatex = `(${lhs}) - (${rhs})`;
                 const parsed = nerdamer.convertFromLaTeX(fLatex);
                 const f = parsed.buildFunction(["x", "y"]);
                 board.create("implicitcurve", [(x, y) => f(x, y)]);
               } else {
                 // Explicit: y = f(x)
-                const parsed = nerdamer.convertFromLaTeX(expr);
+                const parsed = nerdamer.convertFromLaTeX(normalized);
                 const f = parsed.buildFunction(["x"]);
                 board.create("functiongraph", [(x) => f(x)]);
               }
