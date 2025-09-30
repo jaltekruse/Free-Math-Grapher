@@ -3,7 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <title>Graphing Calculator Prototype</title>
-    <!-- Tailwind (for layout / styles, optional) -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- MathQuill -->
@@ -11,7 +10,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.css"
     />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.js"></script>
 
     <!-- JSXGraph -->
     <link
@@ -24,18 +23,40 @@
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-
-    <!-- react-mathquill -->
-    <script src="https://unpkg.com/react-mathquill/build/react-mathquill.js"></script>
   </head>
   <body class="h-screen">
     <div id="root" class="h-full"></div>
 
     <script type="text/babel">
       const { useState, useEffect, useRef } = React;
-      const { addStyles, EditableMathField } = ReactMathquill;
 
-      addStyles();
+      // A simple React wrapper for MathQuill
+      function MathInput({ latex, onChange }) {
+        const containerRef = useRef(null);
+        const mathFieldRef = useRef(null);
+
+        useEffect(() => {
+          if (!containerRef.current) return;
+
+          const MQ = MathQuill.getInterface(2);
+          mathFieldRef.current = MQ.MathField(containerRef.current, {
+            spaceBehavesLikeTab: true,
+            handlers: {
+              edit: () => {
+                onChange(mathFieldRef.current.latex());
+              },
+            },
+          });
+          mathFieldRef.current.latex(latex || "");
+        }, []);
+
+        return (
+          <span
+            ref={containerRef}
+            className="block bg-white p-2 rounded border min-h-[40px]"
+          ></span>
+        );
+      }
 
       function GraphingCalculator() {
         const boardRef = useRef(null);
@@ -59,10 +80,10 @@
           if (!jsxBoard.current) return;
           const board = jsxBoard.current;
 
-          // Remove old objects (curves)
+          // Clear previous curves
           board.removeObject(board.objectsList);
 
-          // Add curves for each valid expression
+          // Plot each expression
           expressions.forEach((expr) => {
             if (!expr.trim()) return;
             try {
@@ -75,7 +96,6 @@
           board.update();
         }, [expressions]);
 
-        // crude latex -> js evaluator
         const evalExpr = (expr, x) => {
           const jsExpr = expr.replace(/\^/g, "**");
           return Function("x", `return ${jsExpr};`)(x);
@@ -96,24 +116,17 @@
           setExpressions(newExpressions);
         };
 
-        const addInput = () => {
-          setExpressions([...expressions, ""]);
-        };
+        const addInput = () => setExpressions([...expressions, ""]);
 
         return (
           <div className="flex h-full">
-            {/* Left side inputs */}
+            {/* Left input column */}
             <div className="w-1/3 p-4 space-y-2 overflow-y-auto bg-gray-100">
               {expressions.map((expr, i) => (
-                <EditableMathField
+                <MathInput
                   key={i}
                   latex={expr}
-                  onChange={(mf) => updateExpression(i, mf.latex())}
-                  style={{
-                    background: "white",
-                    padding: "8px",
-                    borderRadius: "6px",
-                  }}
+                  onChange={(latex) => updateExpression(i, latex)}
                 />
               ))}
               <button
@@ -136,4 +149,3 @@
     </script>
   </body>
 </html>
-
