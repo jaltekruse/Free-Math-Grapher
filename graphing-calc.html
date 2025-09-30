@@ -5,12 +5,15 @@
     <title>Graphing Calculator Prototype</title>
     <script src="https://cdn.tailwindcss.com"></script>
 
+    <!-- jQuery (required for MathQuill) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
     <!-- MathQuill -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.css"
     />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.js"></script>
 
     <!-- JSXGraph -->
     <link
@@ -80,7 +83,7 @@
           if (!jsxBoard.current) return;
           const board = jsxBoard.current;
 
-          // Clear old objects
+          // Clear previous curves
           board.removeObject(board.objectsList);
 
           // Plot each expression
@@ -149,3 +152,4 @@
     </script>
   </body>
 </html>
+
