@@ -68,16 +68,18 @@
         const [expressions, setExpressions] = useState([""]);
         const jsxBoard = useRef(null);
 
-        // Setup JSXGraph board
-        useEffect(() => {
-          if (!boardRef.current) return;
-          if (!jsxBoard.current) {
-            jsxBoard.current = JXG.JSXGraph.initBoard("jxgboard", {
-              boundingbox: [-10, 10, 10, -10],
-              axis: true,
-            });
-          }
-        }, []);
+useEffect(() => {
+  if (!boardRef.current) return;
+  if (!jsxBoard.current) {
+    jsxBoard.current = JXG.JSXGraph.initBoard("jxgboard", {
+      boundingbox: [-10, 10, 10, -10],
+      axis: true,
+      grid: true,
+      keepaspectratio: true,
+      showCopyright: false
+    });
+  }
+}, []);
 
         // Redraw curves whenever expressions change
         useEffect(() => {
