@@ -115,15 +115,27 @@
 
         const latexToMath = (latex) => {
           return latex
-            .replace(/\\cdot/g, "*")
+            // remove LaTeX spacing and grouping
+            .replace(/\\left/g, "")
+            .replace(/\\right/g, "")
+            // fractions \frac{a}{b} -> (a)/(b)
             .replace(/\\frac{([^}]*)}{([^}]*)}/g, "($1)/($2)")
+            // sqrt
             .replace(/\\sqrt{([^}]*)}/g, "sqrt($1)")
-            .replace(/\\pi/g, "pi")
+            // trig and log
             .replace(/\\sin/g, "sin")
             .replace(/\\cos/g, "cos")
             .replace(/\\tan/g, "tan")
             .replace(/\\ln/g, "log")
-            .replace(/\\log/g, "log");
+            .replace(/\\log/g, "log")
+            // constants
+            .replace(/\\pi/g, "pi")
+            .replace(/\\e/g, "e")
+            // multiplication dot
+            .replace(/\\cdot/g, "*")
+            // strip braces { }
+            .replace(/[{}]/g, "")
+            .trim();
         };
 
         const updateExpression = (index, latex) => {
