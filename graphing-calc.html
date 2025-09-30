@@ -2,10 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Graphing Calculator Prototype</title>
+    <title>Graphing Calculator with math.js</title>
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- jQuery (required for MathQuill) -->
+    <!-- jQuery (for MathQuill) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <!-- MathQuill -->
@@ -21,6 +21,9 @@
       href="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css"
     />
     <script src="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js"></script>
+
+    <!-- math.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/13.2.0/math.js"></script>
 
     <!-- React / ReactDOM / Babel -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -40,7 +43,6 @@
 
         useEffect(() => {
           if (!containerRef.current || !window.MathQuill) return;
-
           const MQ = window.MathQuill.getInterface(2);
           mathFieldRef.current = MQ.MathField(containerRef.current, {
             spaceBehavesLikeTab: true,
@@ -69,7 +71,6 @@
         // Setup JSXGraph board
         useEffect(() => {
           if (!boardRef.current) return;
-
           if (!jsxBoard.current) {
             jsxBoard.current = JXG.JSXGraph.initBoard("jxgboard", {
               boundingbox: [-10, 10, 10, -10],
@@ -82,15 +83,28 @@
         useEffect(() => {
           if (!jsxBoard.current) return;
           const board = jsxBoard.current;
-
-          // Clear previous curves
           board.removeObject(board.objectsList);
 
-          // Plot each expression
           expressions.forEach((expr) => {
             if (!expr.trim()) return;
+
             try {
-              board.create("functiongraph", [(x) => evalExpr(expr, x)]);
+              const clean = latexToMath(expr);
+
+              if (clean.includes("=")) {
+                // implicit curve: left = right
+                const [lhs, rhs] = clean.split("=");
+                const f = math.parse(`(${lhs}) - (${rhs})`).compile();
+                board.create("implicitcurve", [
+                  (x, y) => f.evaluate({ x, y }),
+                ]);
+              } else {
+                // explicit function: y = f(x)
+                const f = math.parse(clean).compile();
+                board.create("functiongraph", [
+                  (x) => f.evaluate({ x }),
+                ]);
+              }
             } catch (e) {
               console.warn("Invalid expression:", expr, e);
             }
@@ -99,23 +113,22 @@
           board.update();
         }, [expressions]);
 
-        const evalExpr = (expr, x) => {
-          const jsExpr = expr.replace(/\^/g, "**");
-          return Function("x", `return ${jsExpr};`)(x);
+        const latexToMath = (latex) => {
+          return latex
+            .replace(/\\cdot/g, "*")
+            .replace(/\\frac{([^}]*)}{([^}]*)}/g, "($1)/($2)")
+            .replace(/\\sqrt{([^}]*)}/g, "sqrt($1)")
+            .replace(/\\pi/g, "pi")
+            .replace(/\\sin/g, "sin")
+            .replace(/\\cos/g, "cos")
+            .replace(/\\tan/g, "tan")
+            .replace(/\\ln/g, "log")
+            .replace(/\\log/g, "log");
         };
 
         const updateExpression = (index, latex) => {
-          const expr = latex
-            .replace(/\\cdot/g, "*")
-            .replace(/\\frac{([^}]*)}{([^}]*)}/g, "($1)/($2)")
-            .replace(/\\sqrt{([^}]*)}/g, "Math.sqrt($1)")
-            .replace(/\\pi/g, "Math.PI")
-            .replace(/\\sin/g, "Math.sin")
-            .replace(/\\cos/g, "Math.cos")
-            .replace(/\\tan/g, "Math.tan");
-
           const newExpressions = [...expressions];
-          newExpressions[index] = expr;
+          newExpressions[index] = latex;
           setExpressions(newExpressions);
         };
 
