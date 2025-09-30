@@ -77,6 +77,7 @@
         const boardRef = useRef(null);
         const [expressions, setExpressions] = useState([""]);
         const jsxBoard = useRef(null);
+        const curvesRef = useRef([]);
 
         // Initialize JSXGraph board
         useEffect(() => {
@@ -96,7 +97,10 @@
         useEffect(() => {
           if (!jsxBoard.current) return;
           const board = jsxBoard.current;
-          board.removeObject(board.objectsList);
+
+          // Remove only previous curves, not axes/grid
+          curvesRef.current.forEach((c) => board.removeObject(c));
+          curvesRef.current = [];
 
           expressions.forEach((expr) => {
             if (!expr.trim()) return;
@@ -104,21 +108,24 @@
             try {
               // normalize Unicode minus sign
               const normalized = expr.replace(/−/g, "-");
+              let curve;
 
               if (normalized.includes("=")) {
                 // Implicit: lhs = rhs
                 const [lhs, rhs] = normalized.split("=");
                 const fLatex = `(${lhs}) - (${rhs})`;
                 const parsed = nerdamer.convertFromLaTeX(fLatex);
-                const f = parsed.buildFunction(["x", "y"]);
-                board.create("implicitcurve", [(x, y) => f(x, y)]);
+                const f = parsed.buildFunction(["x","y"]);
+                curve = board.create("implicitcurve", [(x,y) => f(x,y)]);
               } else {
                 // Explicit: y = f(x)
                 const parsed = nerdamer.convertFromLaTeX(normalized);
                 const f = parsed.buildFunction(["x"]);
-                board.create("functiongraph", [(x) => f(x)]);
+                curve = board.create("functiongraph", [(x) => f(x)]);
               }
-            } catch (e) {
+
+              curvesRef.current.push(curve);
+            } catch(e) {
               console.warn("Invalid expression:", expr, e);
             }
           });
