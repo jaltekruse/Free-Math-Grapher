@@ -2,10 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Graphing Calculator with math.js</title>
+    <title>Graphing Calculator with Nerdamer</title>
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- jQuery (for MathQuill) -->
+    <!-- jQuery (needed for MathQuill) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <!-- MathQuill -->
@@ -22,8 +22,11 @@
     />
     <script src="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js"></script>
 
-    <!-- math.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/13.2.0/math.js"></script>
+    <!-- Nerdamer (LaTeX parsing + math engine) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nerdamer/1.1.13/nerdamer.core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nerdamer/1.1.13/Algebra.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nerdamer/1.1.13/Calculus.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nerdamer/1.1.13/Solve.min.js"></script>
 
     <!-- React / ReactDOM / Babel -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -36,7 +39,7 @@
     <script type="text/babel">
       const { useState, useEffect, useRef } = React;
 
-      // React wrapper for MathQuill
+      // React wrapper for MathQuill input
       function MathInput({ latex, onChange }) {
         const containerRef = useRef(null);
         const mathFieldRef = useRef(null);
@@ -89,21 +92,18 @@
             if (!expr.trim()) return;
 
             try {
-              const clean = latexToMath(expr);
-
-              if (clean.includes("=")) {
-                // implicit curve: left = right
-                const [lhs, rhs] = clean.split("=");
-                const f = math.parse(`(${lhs}) - (${rhs})`).compile();
-                board.create("implicitcurve", [
-                  (x, y) => f.evaluate({ x, y }),
-                ]);
+              if (expr.includes("=")) {
+                // Implicit: lhs = rhs
+                const [lhs, rhs] = expr.split("=");
+                const fLatex = `(${lhs}) - (${rhs})`;
+                const parsed = nerdamer.convertFromLaTeX(fLatex);
+                const f = parsed.buildFunction(["x", "y"]);
+                board.create("implicitcurve", [(x, y) => f(x, y)]);
               } else {
-                // explicit function: y = f(x)
-                const f = math.parse(clean).compile();
-                board.create("functiongraph", [
-                  (x) => f.evaluate({ x }),
-                ]);
+                // Explicit: y = f(x)
+                const parsed = nerdamer.convertFromLaTeX(expr);
+                const f = parsed.buildFunction(["x"]);
+                board.create("functiongraph", [(x) => f(x)]);
               }
             } catch (e) {
               console.warn("Invalid expression:", expr, e);
@@ -112,31 +112,6 @@
 
           board.update();
         }, [expressions]);
-
-        const latexToMath = (latex) => {
-          return latex
-            // remove LaTeX spacing and grouping
-            .replace(/\\left/g, "")
-            .replace(/\\right/g, "")
-            // fractions \frac{a}{b} -> (a)/(b)
-            .replace(/\\frac{([^}]*)}{([^}]*)}/g, "($1)/($2)")
-            // sqrt
-            .replace(/\\sqrt{([^}]*)}/g, "sqrt($1)")
-            // trig and log
-            .replace(/\\sin/g, "sin")
-            .replace(/\\cos/g, "cos")
-            .replace(/\\tan/g, "tan")
-            .replace(/\\ln/g, "log")
-            .replace(/\\log/g, "log")
-            // constants
-            .replace(/\\pi/g, "pi")
-            .replace(/\\e/g, "e")
-            // multiplication dot
-            .replace(/\\cdot/g, "*")
-            // strip braces { }
-            .replace(/[{}]/g, "")
-            .trim();
-        };
 
         const updateExpression = (index, latex) => {
           const newExpressions = [...expressions];
@@ -177,4 +152,3 @@
     </script>
   </body>
 </html>
-
