@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Graphing Calculator Prototype</title>
+    <!-- Tailwind (for layout / styles, optional) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- MathQuill -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.js"></script>
+
+    <!-- JSXGraph -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js"></script>
+
+    <!-- React / ReactDOM / Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+    <!-- react-mathquill -->
+    <script src="https://unpkg.com/react-mathquill/build/react-mathquill.js"></script>
+  </head>
+  <body class="h-screen">
+    <div id="root" class="h-full"></div>
+
+    <script type="text/babel">
+      const { useState, useEffect, useRef } = React;
+      const { addStyles, EditableMathField } = ReactMathquill;
+
+      addStyles();
+
+      function GraphingCalculator() {
+        const boardRef = useRef(null);
+        const [expressions, setExpressions] = useState([""]);
+        const jsxBoard = useRef(null);
+
+        // Setup JSXGraph board
+        useEffect(() => {
+          if (!boardRef.current) return;
+
+          if (!jsxBoard.current) {
+            jsxBoard.current = JXG.JSXGraph.initBoard("jxgboard", {
+              boundingbox: [-10, 10, 10, -10],
+              axis: true,
+            });
+          }
+        }, []);
+
+        // Redraw curves whenever expressions change
+        useEffect(() => {
+          if (!jsxBoard.current) return;
+          const board = jsxBoard.current;
+
+          // Remove old objects (curves)
+          board.removeObject(board.objectsList);
+
+          // Add curves for each valid expression
+          expressions.forEach((expr) => {
+            if (!expr.trim()) return;
+            try {
+              board.create("functiongraph", [(x) => evalExpr(expr, x)]);
+            } catch (e) {
+              console.warn("Invalid expression:", expr);
+            }
+          });
+
+          board.update();
+        }, [expressions]);
+
+        // crude latex -> js evaluator
+        const evalExpr = (expr, x) => {
+          const jsExpr = expr.replace(/\^/g, "**");
+          return Function("x", `return ${jsExpr};`)(x);
+        };
+
+        const updateExpression = (index, latex) => {
+          const expr = latex
+            .replace(/\\cdot/g, "*")
+            .replace(/\\frac{([^}]*)}{([^}]*)}/g, "($1)/($2)")
+            .replace(/\\sqrt{([^}]*)}/g, "Math.sqrt($1)")
+            .replace(/\\pi/g, "Math.PI")
+            .replace(/\\sin/g, "Math.sin")
+            .replace(/\\cos/g, "Math.cos")
+            .replace(/\\tan/g, "Math.tan");
+
+          const newExpressions = [...expressions];
+          newExpressions[index] = expr;
+          setExpressions(newExpressions);
+        };
+
+        const addInput = () => {
+          setExpressions([...expressions, ""]);
+        };
+
+        return (
+          <div className="flex h-full">
+            {/* Left side inputs */}
+            <div className="w-1/3 p-4 space-y-2 overflow-y-auto bg-gray-100">
+              {expressions.map((expr, i) => (
+                <EditableMathField
+                  key={i}
+                  latex={expr}
+                  onChange={(mf) => updateExpression(i, mf.latex())}
+                  style={{
+                    background: "white",
+                    padding: "8px",
+                    borderRadius: "6px",
+                  }}
+                />
+              ))}
+              <button
+                onClick={addInput}
+                className="px-3 py-2 bg-blue-500 text-white rounded"
+              >
+                + Add Expression
+              </button>
+            </div>
+
+            {/* Right side graph */}
+            <div className="w-2/3 h-full" id="jxgboard" ref={boardRef}></div>
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(
+        <GraphingCalculator />
+      );
+    </script>
+  </body>
+</html>
+
