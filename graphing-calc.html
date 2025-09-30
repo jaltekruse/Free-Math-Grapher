@@ -10,7 +10,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.css"
     />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.js"></script>
 
     <!-- JSXGraph -->
     <link
@@ -30,15 +30,15 @@
     <script type="text/babel">
       const { useState, useEffect, useRef } = React;
 
-      // A simple React wrapper for MathQuill
+      // React wrapper for MathQuill
       function MathInput({ latex, onChange }) {
         const containerRef = useRef(null);
         const mathFieldRef = useRef(null);
 
         useEffect(() => {
-          if (!containerRef.current) return;
+          if (!containerRef.current || !window.MathQuill) return;
 
-          const MQ = MathQuill.getInterface(2);
+          const MQ = window.MathQuill.getInterface(2);
           mathFieldRef.current = MQ.MathField(containerRef.current, {
             spaceBehavesLikeTab: true,
             handlers: {
@@ -80,7 +80,7 @@
           if (!jsxBoard.current) return;
           const board = jsxBoard.current;
 
-          // Clear previous curves
+          // Clear old objects
           board.removeObject(board.objectsList);
 
           // Plot each expression
@@ -89,7 +89,7 @@
             try {
               board.create("functiongraph", [(x) => evalExpr(expr, x)]);
             } catch (e) {
-              console.warn("Invalid expression:", expr);
+              console.warn("Invalid expression:", expr, e);
             }
           });
 
