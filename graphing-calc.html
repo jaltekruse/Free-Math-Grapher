@@ -151,7 +151,19 @@
               axis: true,
               grid: true,
               keepaspectratio: true,
-              showCopyright: false
+              showCopyright: false,
+              pan: {
+                enabled: true,
+                needShift: false
+              },
+              zoom: {
+                factorX: 1.25,
+                factorY: 1.25,
+                wheel: true,
+                pinsh: true,
+                needshift: false,
+                eps: 0.1
+              }
             });
           }
         }, []);
