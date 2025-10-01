@@ -25,6 +25,9 @@
     <!-- Nerdamer (UMD build with LaTeX support) -->
     <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/all.min.js"></script>
 
+    <!-- IndexedDB helper -->
+    <script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/idb-keyval.iife.min.js"></script>
+
     <!-- React / ReactDOM / Babel -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -46,6 +49,7 @@
 
     <script type="text/babel">
       const { useState, useEffect, useRef } = React;
+      const { set: idbSet, get: idbGet } = idbKeyval;
 
       function MathInput({ latex, onChange }) {
         const containerRef = useRef(null);
@@ -81,6 +85,21 @@
 
         const colors = ["blue", "red", "green", "purple", "orange", "black"];
 
+        // Load saved expressions from IndexedDB on mount
+        useEffect(() => {
+          idbGet("expressions").then((saved) => {
+            if (saved && Array.isArray(saved) && saved.length > 0) {
+              setExpressions(saved);
+            }
+          });
+        }, []);
+
+        // Save expressions to IndexedDB whenever they change
+        useEffect(() => {
+          idbSet("expressions", expressions);
+        }, [expressions]);
+
+        // Initialize JSXGraph board
         useEffect(() => {
           if (!boardRef.current) return;
           if (!jsxBoard.current) {
@@ -94,6 +113,7 @@
           }
         }, []);
 
+        // Redraw curves whenever expressions change
         useEffect(() => {
           if (!jsxBoard.current) return;
           const board = jsxBoard.current;
