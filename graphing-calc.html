@@ -1,3 +1,21 @@
+<!-- 
+TODO List
+
+bunch of test graphs, including some of these failing examples described below
+file:///home/jason/src/grapher-free-math/graphing-calc.html#JTVCJTdCJTIybGF0ZXglMjIlM0ElMjIlNUMlNUNzaW4lNUMlNUNsZWZ0KHglNUMlNUNyaWdodCklMkIzJTIyJTJDJTIyY29sb3IlMjIlM0ElMjJibHVlJTIyJTdEJTJDJTdCJTIybGF0ZXglMjIlM0ElMjIlNUMlNUN0YW4lNUMlNUNsZWZ0KHglNUMlNUNyaWdodCklMjIlMkMlMjJjb2xvciUyMiUzQSUyMnJlZCUyMiU3RCUyQyU3QiUyMmxhdGV4JTIyJTNBJTIyJTVDJTVDbG9nJTVDJTVDbGVmdCh4JTVDJTVDcmlnaHQpJTIyJTJDJTIyY29sb3IlMjIlM0ElMjJncmVlbiUyMiU3RCUyQyU3QiUyMmxhdGV4JTIyJTNBJTIyJTVDJTVDZnJhYyU3QjElN0QlN0J4JTdEJTJCNCUyMiUyQyUyMmNvbG9yJTIyJTNBJTIycHVycGxlJTIyJTdEJTJDJTdCJTIybGF0ZXglMjIlM0ElMjIlNUMlNUNmcmFjJTdCeCU1RTIlN0QlN0IyNSU3RCUyQiU1QyU1Q2ZyYWMlN0J5JTVFMiU3RCU3QjM1JTdEJTNEMSUyMiUyQyUyMmNvbG9yJTIyJTNBJTIyb3JhbmdlJTIyJTdEJTJDJTdCJTIybGF0ZXglMjIlM0ElMjJ4JTVFMiUyQnklNUUyJTNEMyUyMiUyQyUyMmNvbG9yJTIyJTNBJTIyYmxhY2slMjIlN0QlMkMlN0IlMjJsYXRleCUyMiUzQSUyMnglNUUyJTJCeSU1RTMlM0QxJTIyJTJDJTIyY29sb3IlMjIlM0ElMjJibHVlJTIyJTdEJTJDJTdCJTIybGF0ZXglMjIlM0ElMjJ5JTNEeCU1QyU1Q2Nkb3QlNUMlNUNzaW4lMjB4LWZsb29yJTVDJTVDbGVmdCglNUMlNUNmcmFjJTdCMyU3RCU3QnglN0QlNUMlNUNsZWZ0KHgtMiU1QyU1Q3JpZ2h0KSU1QyU1Q3JpZ2h0KSUyMiUyQyUyMmNvbG9yJTIyJTNBJTIycmVkJTIyJTdEJTJDJTdCJTIybGF0ZXglMjIlM0ElMjIteCU1RTIlMkI1eCU1QyU1Q2Nkb3QlMjB5JTJCM3ktMnklNUUyJTNENyUyMiUyQyUyMmNvbG9yJTIyJTNBJTIyZ3JlZW4lMjIlN0QlMkMlN0IlMjJsYXRleCUyMiUzQSUyMiU1QyU1Q2ZyYWMlN0IxJTdEJTdCMiU3RHglNUUyJTJCJTVDJTVDZnJhYyU3QnklNUUyJTdEJTdCeCU1RTIlN0QlM0QzYWJzJTVDJTVDbGVmdCglNUMlNUNzaW4lMjB4JTVDJTVDcmlnaHQpJTIyJTJDJTIyY29sb3IlMjIlM0ElMjJwdXJwbGUlMjIlN0QlMkMlN0IlMjJsYXRleCUyMiUzQSUyMjN4LTJ5JTNENyUyMiUyQyUyMmNvbG9yJTIyJTNBJTIyb3JhbmdlJTIyJTdEJTJDJTdCJTIybGF0ZXglMjIlM0ElMjJ5JTVDJTVDbGUwLjElNUMlNUNsZWZ0KHgtMSU1QyU1Q3JpZ2h0KSU1QyU1Q2xlZnQoeC03JTVDJTVDcmlnaHQpJTVDJTVDbGVmdCh4JTJCNSU1QyU1Q3JpZ2h0KSUyMiUyQyUyMmNvbG9yJTIyJTNBJTIyYmxhY2slMjIlN0QlMkMlN0IlMjJsYXRleCUyMiUzQSUyMjglMjIlMkMlMjJjb2xvciUyMiUzQSUyMmJsdWUlMjIlN0QlNUQ=
+
+-x^2+5x\cdot y+3y-2y^2=7
+
+if remove the cdot and just have xy this blows up
+
+similar reasons this also fails for "xsin"
+y=x\sin x-\operatorname{floor}\left(\frac{3}{x}\left(x-2\right)\right)
+
+add support for shading/inequalities
+https://stackoverflow.com/questions/57466942/how-can-i-shade-inside-the-curve-using-jsxgraph
+
+
+-->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -187,11 +205,31 @@
                 const fLatex = `(${lhs}) - (${rhs})`;
                 const parsed = nerdamer.convertFromLaTeX(fLatex);
                 const f = parsed.buildFunction(["x","y"]);
-                curve = board.create("implicitcurve", [(x,y) => f(x,y)], { strokeColor: color });
+                let failedOnce = false;
+                const fWrapped = (x,y) => {
+                    if (failedOnce) return;
+                    try {
+                        return f(x,y)
+                    } catch (e) {
+                        failedOnce = true;
+                        console.log(e);
+                    }
+                }
+                curve = board.create("implicitcurve", [(x,y) => fWrapped(x,y)], { strokeColor: color });
               } else {
                 const parsed = nerdamer.convertFromLaTeX(normalized);
                 const f = parsed.buildFunction(["x"]);
-                curve = board.create("functiongraph", [(x) => f(x)], { strokeColor: color });
+                let failedOnce = false;
+                const fWrapped = (x) => {
+                    if (failedOnce) return;
+                    try {
+                        return f(x)
+                    } catch (e) {
+                        failedOnce = true;
+                        console.log(e);
+                    }
+                }
+                curve = board.create("functiongraph", [(x) => fWrapped(x)], { strokeColor: color });
               }
 
               curvesRef.current.push(curve);
