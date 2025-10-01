@@ -79,6 +79,9 @@
         const jsxBoard = useRef(null);
         const curvesRef = useRef([]);
 
+        // Color palette
+        const colors = ["#e6194B", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4", "#46f0f0", "#f032e6"];
+
         // Initialize JSXGraph board
         useEffect(() => {
           if (!boardRef.current) return;
@@ -102,12 +105,13 @@
           curvesRef.current.forEach((c) => board.removeObject(c));
           curvesRef.current = [];
 
-          expressions.forEach((expr) => {
+          expressions.forEach((expr, index) => {
             if (!expr.trim()) return;
 
             try {
               // normalize Unicode minus sign
               const normalized = expr.replace(/−/g, "-");
+              const color = colors[index % colors.length];
               let curve;
 
               if (normalized.includes("=")) {
@@ -116,12 +120,12 @@
                 const fLatex = `(${lhs}) - (${rhs})`;
                 const parsed = nerdamer.convertFromLaTeX(fLatex);
                 const f = parsed.buildFunction(["x","y"]);
-                curve = board.create("implicitcurve", [(x,y) => f(x,y)]);
+                curve = board.create("implicitcurve", [(x,y) => f(x,y)], { strokeColor: color });
               } else {
                 // Explicit: y = f(x)
                 const parsed = nerdamer.convertFromLaTeX(normalized);
                 const f = parsed.buildFunction(["x"]);
-                curve = board.create("functiongraph", [(x) => f(x)]);
+                curve = board.create("functiongraph", [(x) => f(x)], { strokeColor: color });
               }
 
               curvesRef.current.push(curve);
@@ -172,4 +176,3 @@
     </script>
   </body>
 </html>
-
