@@ -25,13 +25,16 @@
     <!-- Nerdamer (UMD build with LaTeX support) -->
     <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/all.min.js"></script>
 
-    <!-- IndexedDB helper -->
-    <script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/idb-keyval.iife.min.js"></script>
-
     <!-- React / ReactDOM / Babel -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    
+    <script type="module">
+      import { get, set } from 'https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm';
+      window.idbGet = get;
+      window.idbSet = set;
+    </script>
 
     <style>
       html, body, #root {
@@ -49,7 +52,8 @@
 
     <script type="text/babel">
       const { useState, useEffect, useRef } = React;
-      const { set: idbSet, get: idbGet } = idbKeyval;
+      const idbGet = window.idbGet;
+      const idbSet = window.idbSet;
 
       function MathInput({ latex, onChange }) {
         const containerRef = useRef(null);
