@@ -30,6 +30,7 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     
+    <!-- idb-keyval -->
     <script type="module">
       import { get, set } from 'https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm';
       window.idbGet = get;
@@ -55,6 +56,20 @@
       const idbGet = window.idbGet;
       const idbSet = window.idbSet;
 
+      // Simple debounce helper
+      function debounce(fn, delay) {
+        let timer;
+        return (...args) => {
+          clearTimeout(timer);
+          timer = setTimeout(() => fn(...args), delay);
+        };
+      }
+
+      // Debounced wrapper for IndexedDB save
+      const saveExpressionsDebounced = debounce((expressions) => {
+        idbSet("expressions", expressions);
+      }, 500);
+
       function MathInput({ latex, onChange }) {
         const containerRef = useRef(null);
         const mathFieldRef = useRef(null);
@@ -73,7 +88,7 @@
           mathFieldRef.current.latex(latex || "");
         }, []);
 
-        // 🔑 keep field in sync with prop
+        // Keep field synced with prop
         useEffect(() => {
           if (mathFieldRef.current && latex !== mathFieldRef.current.latex()) {
             mathFieldRef.current.latex(latex || "");
@@ -96,6 +111,7 @@
 
         const colors = ["blue", "red", "green", "purple", "orange", "black"];
 
+        // Load saved expressions
         useEffect(() => {
           idbGet("expressions").then((saved) => {
             if (saved && Array.isArray(saved) && saved.length > 0) {
@@ -104,10 +120,12 @@
           });
         }, []);
 
+        // Save (debounced)
         useEffect(() => {
-          idbSet("expressions", expressions);
+          saveExpressionsDebounced(expressions);
         }, [expressions]);
 
+        // Init JSXGraph
         useEffect(() => {
           if (!boardRef.current) return;
           if (!jsxBoard.current) {
@@ -121,6 +139,7 @@
           }
         }, []);
 
+        // Draw curves
         useEffect(() => {
           if (!jsxBoard.current) return;
           const board = jsxBoard.current;
@@ -130,7 +149,6 @@
 
           expressions.forEach(({ latex, color }) => {
             if (!latex.trim()) return;
-
             try {
               const normalized = latex.replace(/−/g, "-");
               let curve;
