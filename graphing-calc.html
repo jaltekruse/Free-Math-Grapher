@@ -56,7 +56,6 @@
       const idbGet = window.idbGet;
       const idbSet = window.idbSet;
 
-      // Simple debounce helper
       function debounce(fn, delay) {
         let timer;
         return (...args) => {
@@ -65,10 +64,21 @@
         };
       }
 
-      // Debounced wrapper for IndexedDB save
       const saveExpressionsDebounced = debounce((expressions) => {
         idbSet("expressions", expressions);
       }, 500);
+
+      // --- Sharing helpers ---
+      function encodeState(expressions) {
+        return btoa(encodeURIComponent(JSON.stringify(expressions)));
+      }
+      function decodeState(hash) {
+        try {
+          return JSON.parse(decodeURIComponent(atob(hash)));
+        } catch {
+          return null;
+        }
+      }
 
       function MathInput({ latex, onChange }) {
         const containerRef = useRef(null);
@@ -88,7 +98,6 @@
           mathFieldRef.current.latex(latex || "");
         }, []);
 
-        // Keep field synced with prop
         useEffect(() => {
           if (mathFieldRef.current && latex !== mathFieldRef.current.latex()) {
             mathFieldRef.current.latex(latex || "");
@@ -108,11 +117,18 @@
         const [expressions, setExpressions] = useState([{ latex: "", color: "blue" }]);
         const jsxBoard = useRef(null);
         const curvesRef = useRef([]);
-
         const colors = ["blue", "red", "green", "purple", "orange", "black"];
 
-        // Load saved expressions
+        // Load from URL hash first, else IndexedDB
         useEffect(() => {
+          const hash = window.location.hash.slice(1);
+          if (hash) {
+            const decoded = decodeState(hash);
+            if (decoded && Array.isArray(decoded)) {
+              setExpressions(decoded);
+              return;
+            }
+          }
           idbGet("expressions").then((saved) => {
             if (saved && Array.isArray(saved) && saved.length > 0) {
               setExpressions(saved);
@@ -191,6 +207,14 @@
           setExpressions([...expressions, { latex: "", color: nextColor }]);
         };
 
+        const shareLink = () => {
+          const encoded = encodeState(expressions);
+          const url = `${window.location.origin}${window.location.pathname}#${encoded}`;
+          navigator.clipboard.writeText(url).then(() => {
+            alert("Shareable link copied to clipboard!");
+          });
+        };
+
         return (
           <div className="flex h-full">
             <div className="w-1/3 p-4 space-y-2 overflow-y-auto bg-gray-100">
@@ -213,12 +237,20 @@
                   />
                 </div>
               ))}
-              <button
-                onClick={addInput}
-                className="px-3 py-2 bg-blue-500 text-white rounded"
-              >
-                + Add Expression
-              </button>
+              <div className="flex space-x-2">
+                <button
+                  onClick={addInput}
+                  className="px-3 py-2 bg-blue-500 text-white rounded"
+                >
+                  + Add Expression
+                </button>
+                <button
+                  onClick={shareLink}
+                  className="px-3 py-2 bg-green-500 text-white rounded"
+                >
+                  Share
+                </button>
+              </div>
             </div>
             <div className="w-2/3 h-full" id="jxgboard" ref={boardRef}></div>
           </div>
