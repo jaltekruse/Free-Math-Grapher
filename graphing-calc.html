@@ -68,7 +68,7 @@
         return (
           <span
             ref={containerRef}
-            className="block bg-white p-2 rounded border min-h-[40px]"
+            className="block bg-white p-2 rounded border min-h-[40px] flex-1"
           ></span>
         );
       }
@@ -81,7 +81,6 @@
 
         const colors = ["blue", "red", "green", "purple", "orange", "black"];
 
-        // Initialize JSXGraph board
         useEffect(() => {
           if (!boardRef.current) return;
           if (!jsxBoard.current) {
@@ -95,7 +94,6 @@
           }
         }, []);
 
-        // Redraw curves whenever expressions change
         useEffect(() => {
           if (!jsxBoard.current) return;
           const board = jsxBoard.current;
@@ -153,10 +151,6 @@
             <div className="w-1/3 p-4 space-y-2 overflow-y-auto bg-gray-100">
               {expressions.map((expr, i) => (
                 <div key={i} className="flex items-center space-x-2">
-                  <MathInput
-                    latex={expr.latex}
-                    onChange={(latex) => updateExpression(i, latex)}
-                  />
                   <select
                     value={expr.color}
                     onChange={(e) => updateColor(i, e.target.value)}
@@ -168,6 +162,10 @@
                       </option>
                     ))}
                   </select>
+                  <MathInput
+                    latex={expr.latex}
+                    onChange={(latex) => updateExpression(i, latex)}
+                  />
                 </div>
               ))}
               <button
