@@ -73,6 +73,13 @@
           mathFieldRef.current.latex(latex || "");
         }, []);
 
+        // 🔑 keep field in sync with prop
+        useEffect(() => {
+          if (mathFieldRef.current && latex !== mathFieldRef.current.latex()) {
+            mathFieldRef.current.latex(latex || "");
+          }
+        }, [latex]);
+
         return (
           <span
             ref={containerRef}
@@ -89,7 +96,6 @@
 
         const colors = ["blue", "red", "green", "purple", "orange", "black"];
 
-        // Load saved expressions from IndexedDB on mount
         useEffect(() => {
           idbGet("expressions").then((saved) => {
             if (saved && Array.isArray(saved) && saved.length > 0) {
@@ -98,12 +104,10 @@
           });
         }, []);
 
-        // Save expressions to IndexedDB whenever they change
         useEffect(() => {
           idbSet("expressions", expressions);
         }, [expressions]);
 
-        // Initialize JSXGraph board
         useEffect(() => {
           if (!boardRef.current) return;
           if (!jsxBoard.current) {
@@ -117,7 +121,6 @@
           }
         }, []);
 
-        // Redraw curves whenever expressions change
         useEffect(() => {
           if (!jsxBoard.current) return;
           const board = jsxBoard.current;
@@ -154,15 +157,15 @@
         }, [expressions]);
 
         const updateExpression = (index, newLatex) => {
-          const newExpressions = [...expressions];
-          newExpressions[index].latex = newLatex;
-          setExpressions(newExpressions);
+          setExpressions(exprs => exprs.map((ex, i) => 
+            i === index ? { ...ex, latex: newLatex } : ex
+          ));
         };
 
         const updateColor = (index, newColor) => {
-          const newExpressions = [...expressions];
-          newExpressions[index].color = newColor;
-          setExpressions(newExpressions);
+          setExpressions(exprs => exprs.map((ex, i) => 
+            i === index ? { ...ex, color: newColor } : ex
+          ));
         };
 
         const addInput = () => {
