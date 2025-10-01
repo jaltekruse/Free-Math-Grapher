@@ -75,7 +75,8 @@
       function decodeState(hash) {
         try {
           return JSON.parse(decodeURIComponent(atob(hash)));
-        } catch {
+        } catch(e) {
+          console.log(e);
           return null;
         }
       }
