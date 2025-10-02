@@ -1,0 +1,39 @@
+TODO List
+
+persist grid boundaries/zoom
+
+use different evaluation libarary, from the README
+There was the start of a Typescript port that was worked on 6 months ago
+https://github.com/jiggzson/nerdamer/tree/2.0
+
+Note: The Together-science project decided to pick up the banner where Nerdamer left off. See Nerdamer-Prime.
+https://github.com/together-science/nerdamer-prime
+    * from this project's readme
+    * To keep Nerdamer in good repair, and make improvements where we need them and where we can. Mostly bug fixes. If you investigate some of the bugs in the old repo, you will see that people ask for "things it should be able to do", mostly to do with simplifications. This kind of stuff is difficult, and it is more difficult in someone else's codebase. Nerdamer wasn't meant to be a complete symbolic algebra system. Its wealth of features can fool you, though. Its features and the fact that it works fast, in the browser and NodeJS, makes it still worthwhile. But please understand that it will not achieve a whole lot more than it can do right now. Consider using e.g. SymPy in a WASM webworker if you need more. See here for a demo: SymPy live
+    * https://live.sympy.org/
+    * We have made some improvements - simplification of logs and squareroots, and bug fixes related to those areas and factoring. Unit tests are fixed except for a couple of known flaws. There will be further work in this area. We will also work on vectors, which are not useful for our product together.math today. Those will be breaking changes (THESE ARE NOW IN PROGRESS for versions >= 1.2.0, you are welcome to fork an earlier version).
+        * looked into their product a little, has some interesting elements
+        * https://www.together-science.com/about-together-science
+    * https://mathjs.org/
+
+-x^2+5x\cdot y+3y-2y^2=7
+
+if remove the cdot and just have xy this blows up
+
+similar reasons this also fails for "xsin"
+y=x\sin x-\operatorname{floor}\left(\frac{3}{x}\left(x-2\right)\right)
+
+add support for shading/inequalities
+https://stackoverflow.com/questions/57466942/how-can-i-shade-inside-the-curve-using-jsxgraph
+https://jsxgraph.org/wiki/index.php/Shade_region_bounded_by_curves
+
+Looking up other calculators
+* https://www.reddit.com/r/desmos/comments/18j365o/hello_are_there_any_graphing_calculators_like/
+* https://github.com/xxczaki/awesome-calculators
+* https://sketchometry.org/en/
+
+Math editors:
+* https://github.com/search?q=tiptap-math-extension&type=code
+
+bunch of test graphs, including some of these failing examples described above
+file:///home/jason/src/grapher-free-math/graphing-calc.html#JTVCJTdCJTIybGF0ZXglMjIlM0ElMjIlNUMlNUNzaW4lNUMlNUNsZWZ0KHglNUMlNUNyaWdodCklMkIzJTIyJTJDJTIyY29sb3IlMjIlM0ElMjJibHVlJTIyJTdEJTJDJTdCJTIybGF0ZXglMjIlM0ElMjIlNUMlNUN0YW4lNUMlNUNsZWZ0KHglNUMlNUNyaWdodCklMjIlMkMlMjJjb2xvciUyMiUzQSUyMnJlZCUyMiU3RCUyQyU3QiUyMmxhdGV4JTIyJTNBJTIyJTVDJTVDbG9nJTVDJTVDbGVmdCh4JTVDJTVDcmlnaHQpJTIyJTJDJTIyY29sb3IlMjIlM0ElMjJncmVlbiUyMiU3RCUyQyU3QiUyMmxhdGV4JTIyJTNBJTIyJTVDJTVDZnJhYyU3QjElN0QlN0J4JTdEJTJCNCUyMiUyQyUyMmNvbG9yJTIyJTNBJTIycHVycGxlJTIyJTdEJTJDJTdCJTIybGF0ZXglMjIlM0ElMjIlNUMlNUNmcmFjJTdCeCU1RTIlN0QlN0IyNSU3RCUyQiU1QyU1Q2ZyYWMlN0J5JTVFMiU3RCU3QjM1JTdEJTNEMSUyMiUyQyUyMmNvbG9yJTIyJTNBJTIyb3JhbmdlJTIyJTdEJTJDJTdCJTIybGF0ZXglMjIlM0ElMjJ4JTVFMiUyQnklNUUyJTNEMyUyMiUyQyUyMmNvbG9yJTIyJTNBJTIyYmxhY2slMjIlN0QlMkMlN0IlMjJsYXRleCUyMiUzQSUyMnglNUUyJTJCeSU1RTMlM0QxJTIyJTJDJTIyY29sb3IlMjIlM0ElMjJibHVlJTIyJTdEJTJDJTdCJTIybGF0ZXglMjIlM0ElMjJ5JTNEeCU1QyU1Q2Nkb3QlNUMlNUNzaW4lMjB4LWZsb29yJTVDJTVDbGVmdCglNUMlNUNmcmFjJTdCMyU3RCU3QnglN0QlNUMlNUNsZWZ0KHgtMiU1QyU1Q3JpZ2h0KSU1QyU1Q3JpZ2h0KSUyMiUyQyUyMmNvbG9yJTIyJTNBJTIycmVkJTIyJTdEJTJDJTdCJTIybGF0ZXglMjIlM0ElMjIteCU1RTIlMkI1eCU1QyU1Q2Nkb3QlMjB5JTJCM3ktMnklNUUyJTNENyUyMiUyQyUyMmNvbG9yJTIyJTNBJTIyZ3JlZW4lMjIlN0QlMkMlN0IlMjJsYXRleCUyMiUzQSUyMiU1QyU1Q2ZyYWMlN0IxJTdEJTdCMiU3RHglNUUyJTJCJTVDJTVDZnJhYyU3QnklNUUyJTdEJTdCeCU1RTIlN0QlM0QzYWJzJTVDJTVDbGVmdCglNUMlNUNzaW4lMjB4JTVDJTVDcmlnaHQpJTIyJTJDJTIyY29sb3IlMjIlM0ElMjJwdXJwbGUlMjIlN0QlMkMlN0IlMjJsYXRleCUyMiUzQSUyMjN4LTJ5JTNENyUyMiUyQyUyMmNvbG9yJTIyJTNBJTIyb3JhbmdlJTIyJTdEJTJDJTdCJTIybGF0ZXglMjIlM0ElMjJ5JTVDJTVDbGUwLjElNUMlNUNsZWZ0KHgtMSU1QyU1Q3JpZ2h0KSU1QyU1Q2xlZnQoeC03JTVDJTVDcmlnaHQpJTVDJTVDbGVmdCh4JTJCNSU1QyU1Q3JpZ2h0KSUyMiUyQyUyMmNvbG9yJTIyJTNBJTIyYmxhY2slMjIlN0QlMkMlN0IlMjJsYXRleCUyMiUzQSUyMiU1QyU1Q2Nvcyh4JTVFMiUyQnklNUUyKSUzRCU1QyU1Q3Rhbih4LXkpJTIyJTJDJTIyY29sb3IlMjIlM0ElMjJibHVlJTIyJTdEJTJDJTdCJTIybGF0ZXglMjIlM0ElMjIlNUMlNUNzaW4lNUMlNUNsZWZ0KHglMkJ5JTVDJTVDcmlnaHQpJTJCeCU1QyU1Q2Nkb3QlMjB5JTVFMiUzRDAlMjIlMkMlMjJjb2xvciUyMiUzQSUyMnJlZCUyMiU3RCU1RA==
