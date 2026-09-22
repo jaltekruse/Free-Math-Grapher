@@ -70,11 +70,11 @@
 
       // --- Sharing helpers ---
       function encodeState(expressions) {
-        return btoa(encodeURIComponent(JSON.stringify(expressions)));
+        return encodeURIComponent(JSON.stringify(expressions));
       }
       function decodeState(hash) {
         try {
-          return JSON.parse(decodeURIComponent(atob(hash)));
+          return JSON.parse(decodeURIComponent(hash));
         } catch(e) {
           console.log(e);
           return null;
